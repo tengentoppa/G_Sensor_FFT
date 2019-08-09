@@ -1,0 +1,5 @@
+LIBRARY
+EXPORTS
+	FFT_translate
+	FFT_convertToMagnitude
+    FFT_translateToSpectrum
