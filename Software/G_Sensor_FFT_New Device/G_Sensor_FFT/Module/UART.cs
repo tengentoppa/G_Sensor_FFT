@@ -162,7 +162,7 @@ namespace MP_Moudule
         {
             try
             {
-                if (!m_serialPort.IsOpen) return null;
+                if (!m_serialPort.IsOpen) return new byte[0];
                 int dataLen = m_serialPort.BytesToRead;
                 if (dataLen == 0) return new byte[0];
 

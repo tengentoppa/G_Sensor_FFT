@@ -265,9 +265,9 @@ namespace G_Sensor_FFT
 
             tmpZgc = zgcAxisX;
             tmpGP = tmpZgc.GraphPane;
-            tmpGP.Title.Text = "X軸";
+            tmpGP.Title.Text = "X軸 Acelerate";
             tmpGP.XAxis.Title.Text = "時間(s)";
-            tmpGP.YAxis.Title.Text = "震幅";
+            tmpGP.YAxis.Title.Text = "Acelerate(N)";
             tmpGP.XAxis.Scale.Max = 1.0;
             tmpGP.XAxis.Scale.Min = 0.0;
             tmpGP.YAxis.Scale.Max = 5.0;
@@ -280,9 +280,9 @@ namespace G_Sensor_FFT
 
             tmpZgc = zgcAxisY;
             tmpGP = tmpZgc.GraphPane;
-            tmpGP.Title.Text = "Y軸";
+            tmpGP.Title.Text = "Y軸 Acelerate";
             tmpGP.XAxis.Title.Text = "時間(s)";
-            tmpGP.YAxis.Title.Text = "震幅";
+            tmpGP.YAxis.Title.Text = "Acelerate(N)";
             tmpGP.XAxis.Scale.Max = 1.0;
             tmpGP.XAxis.Scale.Min = 0.0;
             tmpGP.YAxis.Scale.Max = 5.0;
@@ -295,9 +295,9 @@ namespace G_Sensor_FFT
 
             tmpZgc = zgcAxisZ;
             tmpGP = tmpZgc.GraphPane;
-            tmpGP.Title.Text = "Z軸";
+            tmpGP.Title.Text = "Z軸 Acelerate";
             tmpGP.XAxis.Title.Text = "時間(s)";
-            tmpGP.YAxis.Title.Text = "震幅";
+            tmpGP.YAxis.Title.Text = "Acelerate(N)";
             tmpGP.XAxis.Scale.Max = 1.0;
             tmpGP.XAxis.Scale.Min = 0.0;
             tmpGP.YAxis.Scale.Max = 5.0;
@@ -413,22 +413,22 @@ namespace G_Sensor_FFT
             tmpGP.Title.Text = "X軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
             tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.5;
-            tmpGP.YAxis.Scale.Min = -0.5;
+            tmpGP.YAxis.Scale.Max = 4;
+            tmpGP.YAxis.Scale.Min = -4;
 
             tmpGP = zgcFftY.GraphPane;
             tmpGP.Title.Text = "Y軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
             tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.5;
-            tmpGP.YAxis.Scale.Min = -0.5;
+            tmpGP.YAxis.Scale.Max = 4;
+            tmpGP.YAxis.Scale.Min = -4;
 
             tmpGP = zgcFftZ.GraphPane;
             tmpGP.Title.Text = "Z軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
             tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.5;
-            tmpGP.YAxis.Scale.Min = -0.5;
+            tmpGP.YAxis.Scale.Max = 4;
+            tmpGP.YAxis.Scale.Min = -4;
         }
         void SetPaneToDeplacementMode()
         {
@@ -437,23 +437,23 @@ namespace G_Sensor_FFT
             tmpGP = zgcFftX.GraphPane;
             tmpGP.Title.Text = "X軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.05;
-            tmpGP.YAxis.Scale.Min = -0.05;
+            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
+            tmpGP.YAxis.Scale.Max = 400;
+            tmpGP.YAxis.Scale.Min = -400;
 
             tmpGP = zgcFftY.GraphPane;
             tmpGP.Title.Text = "Y軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.05;
-            tmpGP.YAxis.Scale.Min = -0.05;
+            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
+            tmpGP.YAxis.Scale.Max = 400;
+            tmpGP.YAxis.Scale.Min = -400;
 
             tmpGP = zgcFftZ.GraphPane;
             tmpGP.Title.Text = "Z軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(m/s)";
-            tmpGP.YAxis.Scale.Max = 0.05;
-            tmpGP.YAxis.Scale.Min = -0.05;
+            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
+            tmpGP.YAxis.Scale.Max = 400;
+            tmpGP.YAxis.Scale.Min = -400;
         }
         void InitSubscrib()
         {
@@ -523,7 +523,7 @@ namespace G_Sensor_FFT
         PointPairList[] pList = new PointPairList[3];
         PointPairList[] pFftList = new PointPairList[3];
         PointPairList[] pVelocityList = new PointPairList[3];
-        PointPairList[] pDisplacementList = new PointPairList[3];
+        PointPairList[] pDeplacementList = new PointPairList[3];
 
         TimeSpan receiveTimeOut = TimeSpan.FromMilliseconds(5000.0);
         DateTime lastReceiveTime = DateTime.Now;
@@ -556,7 +556,7 @@ namespace G_Sensor_FFT
                 serial_port_dongle.StartReceiveData(ProccessDongleData);
                 if (ToolVersion == Version.Advance)
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(100);
                     StartScan();
                 }
                 btnCom.Text = text.CloseAll;
@@ -1291,7 +1291,7 @@ namespace G_Sensor_FFT
             {
                 pList[i] = new PointPairList();
                 pVelocityList[i] = new PointPairList();
-                pDisplacementList[i] = new PointPairList();
+                pDeplacementList[i] = new PointPairList();
             }
 
             axisH = 0;
@@ -1439,13 +1439,13 @@ namespace G_Sensor_FFT
                             oY = list[1].First(t => t.Y == list[1].Max(n => n.Y)).X * TwoPI;
                             oZ = list[2].First(t => t.Y == list[2].Max(n => n.Y)).X * TwoPI;
 
-                            vX = x / oX;
-                            vY = y / oY;
-                            vZ = z / oZ;
+                            vX = x*9.8 / oX;
+                            vY = y*9.8 / oY;
+                            vZ = z*9.8 / oZ;
 
-                            dX = vX / oX;
-                            dY = vY / oY;
-                            dZ = vZ / oZ;
+                            dX = vX*1000 / oX;
+                            dY = vY*1000 / oY;
+                            dZ = vZ*1000 / oZ;
                             #endregion
 
                             #region Velocity
@@ -1455,9 +1455,9 @@ namespace G_Sensor_FFT
                             #endregion
 
                             #region Deplacement
-                            pDisplacementList[0].Add(h, dX);
-                            pDisplacementList[1].Add(h, dY);
-                            pDisplacementList[2].Add(h, dZ);
+                            pDeplacementList[0].Add(h, dX);
+                            pDeplacementList[1].Add(h, dY);
+                            pDeplacementList[2].Add(h, dZ);
                             #endregion
 
                             for (int i = 0; i < 3; i++)
@@ -1465,6 +1465,7 @@ namespace G_Sensor_FFT
                                 if (pVelocityList[i].Count > rawDataLen)
                                 {
                                     pVelocityList[i].RemoveRange(0, pVelocityList[i].Count - rawDataLen);
+                                    pVelocityList[i].RemoveRange(0, pDeplacementList[i].Count - rawDataLen);
                                 }
                             }
 
@@ -1485,9 +1486,9 @@ namespace G_Sensor_FFT
                                         break;
                                     case CalMode.Deplacement:
                                         MoveZedFftRange(max, min);
-                                        PaintCurve(pDisplacementList[0], zgcFftX);
-                                        PaintCurve(pDisplacementList[1], zgcFftY);
-                                        PaintCurve(pDisplacementList[2], zgcFftZ);
+                                        PaintCurve(pDeplacementList[0], zgcFftX);
+                                        PaintCurve(pDeplacementList[1], zgcFftY);
+                                        PaintCurve(pDeplacementList[2], zgcFftZ);
                                         break;
 
                                 }
