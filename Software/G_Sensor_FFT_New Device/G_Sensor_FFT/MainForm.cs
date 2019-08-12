@@ -1619,9 +1619,9 @@ namespace G_Sensor_FFT
                 result = new List<PointXYX>();
                 foreach (string t in logData)
                 {
-                    string[] split2 = t.Replace("\r", "").Split(',');
+                    string[] split2 = t.TrimEnd().Split('\t');
                     if (split2.Length < 4) continue;
-                    try { result.Add(new PointXYX(double.Parse(split2[2]), double.Parse(split2[3]), double.Parse(split2[4]))); } catch { continue; }
+                    try { result.Add(new PointXYX(double.Parse(split2[1]), double.Parse(split2[2]), double.Parse(split2[3]))); } catch { continue; }
                 }
                 return result;
             }
