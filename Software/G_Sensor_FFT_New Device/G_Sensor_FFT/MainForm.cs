@@ -16,8 +16,8 @@ namespace G_Sensor_FFT
 {
     public struct FFT_Complex
     {
-        public System.Double _real;
-        public System.Double _imag;
+        public double _real;
+        public double _imag;
         public FFT_Complex(double real, double imag)
         {
             _real = real;
@@ -49,11 +49,12 @@ namespace G_Sensor_FFT
         bool flagLockMac = false;
         bool flagRecord = false;
         bool flagAddMark = false;
-        bool flagReceiving = false, flagPause = false, flagPlayRecord = false, flagRecordPause = false;
+        bool flagReceiving = false, flagPause = false, flagRecordPause = false;
         bool flagClosing = false;
         bool flagWarnX = false, flagWarnY = false, flagWarnZ = false;
         const double oneSecondScale = 1000; //ms
         double speedMulti = 1.0;
+        double RecordStartH;
 
         Size formSize;
         frmSetAlarm.xyzLimit limit = new frmSetAlarm.xyzLimit(new double[] { -1, 1, -1, 1, -1, 1 });
@@ -65,6 +66,7 @@ namespace G_Sensor_FFT
         List<string> portList = new List<string>();
         List<PointXYX> logXyz;
         string filePath;
+        string filePathExt;
         Thread PaintXYZ;
         int lastPos = 0;
         #endregion
@@ -145,19 +147,11 @@ namespace G_Sensor_FFT
                 StopRecord = "Stop Record",
                 AddMark = "Mark";
         }
-        class SourceXYX
+        struct SourceXYX
         {
             public DateTime _recordTime;
             public int _timeStamp;
             public int _x, _y, _z;
-            public SourceXYX() { }
-            public SourceXYX(int x, int y, int z)
-            {
-                _x = x;
-                _y = y;
-                _z = z;
-                _recordTime = DateTime.Now;
-            }
             public SourceXYX(int ts, int x, int y, int z)
             {
                 _x = x;
@@ -167,15 +161,25 @@ namespace G_Sensor_FFT
                 _recordTime = DateTime.Now;
             }
         }
-        class PointXYX
+        struct PointXYX
         {
             public double _x, _y, _z;
-            public PointXYX() { }
             public PointXYX(double x, double y, double z)
             {
                 _x = x;
                 _y = y;
                 _z = z;
+            }
+        }
+        struct MaxFreq
+        {
+            public double XHz, YHz, ZHz, Time;
+            public MaxFreq(double xHz, double yHz, double zHz, double time)
+            {
+                XHz = xHz;
+                YHz = yHz;
+                ZHz = zHz;
+                Time = time;
             }
         }
 
@@ -206,8 +210,6 @@ namespace G_Sensor_FFT
             {
                 c.Font = new Font("Consolas", 10f);
             }
-            tmrPaintLog.Interval = refreshInterval;
-
             btnCom.Text = text.OpenCom;
             btnRecord.Text = text.StartRecord;
             btnPlayPause.Text = text.RecordPlay;
@@ -408,52 +410,54 @@ namespace G_Sensor_FFT
         void SetPaneToVelocityMode()
         {
             GraphPane tmpGP;
+            const int max = 1000;
 
             tmpGP = zgcFftX.GraphPane;
             tmpGP.Title.Text = "X軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 4;
-            tmpGP.YAxis.Scale.Min = -4;
+            tmpGP.YAxis.Title.Text = "Velocity(mm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
 
             tmpGP = zgcFftY.GraphPane;
             tmpGP.Title.Text = "Y軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 4;
-            tmpGP.YAxis.Scale.Min = -4;
+            tmpGP.YAxis.Title.Text = "Velocity(mm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
 
             tmpGP = zgcFftZ.GraphPane;
             tmpGP.Title.Text = "Z軸 Velocity";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Velocity(m/s)";
-            tmpGP.YAxis.Scale.Max = 4;
-            tmpGP.YAxis.Scale.Min = -4;
+            tmpGP.YAxis.Title.Text = "Velocity(mm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
         }
         void SetPaneToDeplacementMode()
         {
+            const int max = 1000;
             GraphPane tmpGP;
 
             tmpGP = zgcFftX.GraphPane;
             tmpGP.Title.Text = "X軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
-            tmpGP.YAxis.Scale.Max = 400;
-            tmpGP.YAxis.Scale.Min = -400;
+            tmpGP.YAxis.Title.Text = "Deplacement(μm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
 
             tmpGP = zgcFftY.GraphPane;
             tmpGP.Title.Text = "Y軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
-            tmpGP.YAxis.Scale.Max = 400;
-            tmpGP.YAxis.Scale.Min = -400;
+            tmpGP.YAxis.Title.Text = "Deplacement(μm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
 
             tmpGP = zgcFftZ.GraphPane;
             tmpGP.Title.Text = "Z軸 Deplacement";
             tmpGP.XAxis.Title.Text = "Time(S)";
-            tmpGP.YAxis.Title.Text = "Deplacement(mm/s)";
-            tmpGP.YAxis.Scale.Max = 400;
-            tmpGP.YAxis.Scale.Min = -400;
+            tmpGP.YAxis.Title.Text = "Deplacement(μm/s^2)";
+            tmpGP.YAxis.Scale.Max = max;
+            tmpGP.YAxis.Scale.Min = -max;
         }
         void InitSubscrib()
         {
@@ -524,6 +528,7 @@ namespace G_Sensor_FFT
         PointPairList[] pFftList = new PointPairList[3];
         PointPairList[] pVelocityList = new PointPairList[3];
         PointPairList[] pDeplacementList = new PointPairList[3];
+        List<MaxFreq> MaxFreqs = new List<MaxFreq>();
 
         TimeSpan receiveTimeOut = TimeSpan.FromMilliseconds(5000.0);
         DateTime lastReceiveTime = DateTime.Now;
@@ -608,6 +613,7 @@ namespace G_Sensor_FFT
                     if (string.IsNullOrEmpty(logFileName))
                     {
                         filePath = logPath + $"\\{ByteConverter.ToHexString(curDevice.mac).Replace(' ', '-')}_{writeLogTiming.ToString("yyyyMMdd_HHmmss")}.txt";
+                        filePathExt = logPath + $"\\{ByteConverter.ToHexString(curDevice.mac).Replace(' ', '-')}_{writeLogTiming.ToString("yyyyMMdd_HHmmss")}_Ext.txt";
                     }
                     else
                     {
@@ -617,6 +623,7 @@ namespace G_Sensor_FFT
                             MessageBox.Show("File Name not access,please edit .ini file and try again."); return;
                         }
                         filePath = logPath + $"\\{logFileName}_{writeLogTiming.ToString("yyyyMMdd_HHmmss")}.txt";
+                        filePathExt = logPath + $"\\{logFileName}_{writeLogTiming.ToString("yyyyMMdd_HHmmss")}_Ext.txt";
                     }
                     btnRecord.Text = text.StopRecord;
                     writeLogTiming = DateTime.Now;
@@ -624,6 +631,7 @@ namespace G_Sensor_FFT
                     btnAddMark.Enabled = true;
                     break;
                 case text.StopRecord:
+                    RecordStartH = 0;
                     btnRecord.Text = text.StartRecord;
                     flagRecord = false;
                     btnAddMark.Enabled = false;
@@ -655,15 +663,21 @@ namespace G_Sensor_FFT
         private void btnLoadFile_Click(object sender, EventArgs e)
         {
             dUse duse;
-            flagPlayRecord = false;
-            string[] s_arr = null;
+            string ovdFilePath;
+            string[] aData = null;
+            string[] ovdData = null;        //omega, velocity, deplacement
             if (Directory.Exists(logPath)) { ofdInput.InitialDirectory = logPath; } else { ofdInput.InitialDirectory = Application.StartupPath; }
-            if (ofdInput.ShowDialog(this) != DialogResult.OK)
+            if (ofdInput.ShowDialog(this) != DialogResult.OK) { return; }
+            ovdFilePath = ofdInput.FileName.Replace(".txt", "_Ext.txt");
+            aData = File.ReadAllLines(ofdInput.FileName);
+            try
             {
-                return;
+                ovdData = File.ReadAllLines(ovdFilePath);
             }
-            s_arr = File.ReadAllLines(ofdInput.FileName);
-            if (s_arr.Length < printDataLen)
+            catch { MessageBox.Show("未找到FFT檔案, 檔名應為'_Ext.txt'結尾"); return; }
+            if (aData[0].Split('\t').Length != 4) { MessageBox.Show("Wrong file type"); }
+            if (ovdData[0].Split('\t').Length != 10) { MessageBox.Show("Wrong Ext file type"); }
+            if (aData.Length < printDataLen)
             {
                 MessageBox.Show($"請引入筆數大於等於{printDataLen}筆的資料");
                 return;
@@ -671,12 +685,14 @@ namespace G_Sensor_FFT
             for (int i = 0; i < pList.Length; i++)
             {
                 pList[i] = new PointPairList();
+                pVelocityList[i] = new PointPairList();
+                pDeplacementList[i] = new PointPairList();
             }
-            lastPos = s_arr.Length - 1;
+            lastPos = aData.Length - 1;
             btnLoadFile.Text = text.LoadingFile;
-            Thread t = new Thread(() =>
+            logXyz = LogDataProccess(aData);
+            new Thread(() =>
             {
-                logXyz = LogDataProccess(s_arr);
                 double h = 0.0;
                 foreach (PointXYX p in logXyz)
                 {
@@ -698,8 +714,30 @@ namespace G_Sensor_FFT
 
                 Invoke(duse = () => { btnLoadFile.Text = text.LoadFile; });
             })
-            { IsBackground = true };
-            t.Start();
+            { IsBackground = true }.Start();
+            new Thread(() =>
+            {
+                string[] splitResult;
+                double h;
+                foreach (var data in ovdData)
+                {
+                    splitResult = data.Split('\t');
+                    if (splitResult.Length != 10) { continue; }
+                    try
+                    {
+                        h = double.Parse(splitResult[0]);
+                        pVelocityList[0].Add(h, double.Parse(splitResult[4]));
+                        pVelocityList[1].Add(h, double.Parse(splitResult[5]));
+                        pVelocityList[2].Add(h, double.Parse(splitResult[6]));
+                        pDeplacementList[0].Add(h, double.Parse(splitResult[7]));
+                        pDeplacementList[1].Add(h, double.Parse(splitResult[8]));
+                        pDeplacementList[2].Add(h, double.Parse(splitResult[9]));
+                    }
+                    catch { continue; }
+                }
+                Invoke(duse = () => { cbxCalMode.SelectedIndex = 0; });
+            })
+            { IsBackground = true }.Start();
         }
         int arrPos = 0;
         private void btnPlayPause_Click(object sender, EventArgs e)
@@ -708,7 +746,6 @@ namespace G_Sensor_FFT
             switch (btnPlayPause.Text)
             {
                 case text.RecordPlay:
-                    //tmrPaintLog.Start();
                     flagRecordPause = false;
                     Thread t = new Thread(() =>
                     {
@@ -719,14 +756,12 @@ namespace G_Sensor_FFT
                         double scale = refreshInterval / 1000.0;
                         FFT_Complex[] logFftX, logFftY, logFftZ;
 
-                        logFftX = new FFT_Complex[printDataLen];
-                        logFftY = new FFT_Complex[printDataLen];
-                        logFftZ = new FFT_Complex[printDataLen];
-
-                        //double hz = 0.0f, m_hz = 2048.0;
-                        double[] m_amplitude_x = new double[printDataLen], m_amplitude_y = new double[printDataLen], m_amplitude_z = new double[printDataLen];
-                        FFT_Complex[] m_fft_out_x = new FFT_Complex[printDataLen], m_fft_out_y = new FFT_Complex[printDataLen], m_fft_out_z = new FFT_Complex[printDataLen];
-                        int maxLen = logXyz.Count;
+                        logFftX = new FFT_Complex[defPrintDataLen];
+                        logFftY = new FFT_Complex[defPrintDataLen];
+                        logFftZ = new FFT_Complex[defPrintDataLen];
+                        double[] m_amplitude_x = new double[defPrintDataLen], m_amplitude_y = new double[defPrintDataLen], m_amplitude_z = new double[defPrintDataLen];
+                        FFT_Complex[] m_fft_out_x = new FFT_Complex[defPrintDataLen], m_fft_out_y = new FFT_Complex[defPrintDataLen], m_fft_out_z = new FFT_Complex[defPrintDataLen];
+                        int maxLen = logXyz.Count - 700;
                         if (arrPos >= maxLen)
                         {
                             ZgcResetHorize(zgcAxisX);
@@ -744,6 +779,7 @@ namespace G_Sensor_FFT
                                 ZgcMoveHorize(zgcAxisX, len);
                                 ZgcMoveHorize(zgcAxisY, len);
                                 ZgcMoveHorize(zgcAxisZ, len);
+                                double max = 0, min = 0;
                                 int rangeMax = (int)(arrPos + (len * 1000));
                                 int fftArrayCount = 0;
                                 do
@@ -751,7 +787,6 @@ namespace G_Sensor_FFT
                                     if (arrPos >= maxLen)
                                     {
                                         btnPlayPause_Click(null, null);
-                                        //tmrPaintLog.Stop();
                                         return;
                                     }
                                     logFftX[fftArrayCount] = new FFT_Complex(logXyz[arrPos]._x, 0.0f);
@@ -777,9 +812,36 @@ namespace G_Sensor_FFT
                                     pFftList[1].Add(hz * i, m_amplitude_y[i]);
                                     pFftList[2].Add(hz * i, m_amplitude_z[i]);
                                 }
-                                PaintCurve(pFftList[0], zgcFftX);
-                                PaintCurve(pFftList[1], zgcFftY);
-                                PaintCurve(pFftList[2], zgcFftZ);
+                                try
+                                {
+                                    Invoke(duse = () =>
+                                    {
+                                        max = zgcAxisX.GraphPane.XAxis.Scale.Max;
+                                        min = zgcAxisX.GraphPane.XAxis.Scale.Min;
+                                    });
+                                }
+                                catch { flagRecordPause = true; return; }
+                                switch (calculateMode)
+                                {
+                                    case CalMode.FFT:
+                                        PaintCurve(pFftList[0], zgcFftX);
+                                        PaintCurve(pFftList[1], zgcFftY);
+                                        PaintCurve(pFftList[2], zgcFftZ);
+                                        break;
+                                    case CalMode.Velocity:
+                                        MoveZedFftRange(max, min);
+                                        PaintCurve(pVelocityList[0], zgcFftX);
+                                        PaintCurve(pVelocityList[1], zgcFftY);
+                                        PaintCurve(pVelocityList[2], zgcFftZ);
+                                        break;
+                                    case CalMode.Deplacement:
+                                        MoveZedFftRange(max, min);
+                                        PaintCurve(pDeplacementList[0], zgcFftX);
+                                        PaintCurve(pDeplacementList[1], zgcFftY);
+                                        PaintCurve(pDeplacementList[2], zgcFftZ);
+                                        break;
+
+                                }
                             }
                         }
                     })
@@ -788,7 +850,6 @@ namespace G_Sensor_FFT
                     btnPlayPause.Text = text.RecordPuase;
                     break;
                 case text.RecordPuase:
-                    //tmrPaintLog.Stop();
                     flagRecordPause = true;
                     Invoke(duse = () =>
                     {
@@ -808,7 +869,6 @@ namespace G_Sensor_FFT
                     if (speedMulti > 0.125) { speedMulti /= 2; }
                     break;
             }
-            tmrPaintLog.Interval = 20; /*(int)(defaultInterval / speedMulti);*/
             btnSpeedController.Text = $"{speedMulti}X";
         }
         private void lbMac_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -1142,13 +1202,14 @@ namespace G_Sensor_FFT
                             {
                                 try
                                 {
-                                    point.Enqueue(new SourceXYX(
+                                    var t = new SourceXYX(
                                         tData[0],
-                                        ((((sbyte)tData[0 + i]) << 8) + tData[1 + i]),
-                                        ((((sbyte)tData[2 + i]) << 8) + tData[3 + i]),
-                                        ((((sbyte)tData[4 + i]) << 8) + tData[5 + i])));
+                                        (((sbyte)tData[0 + i]) << 8) + tData[1 + i],
+                                        (((sbyte)tData[2 + i]) << 8) + tData[3 + i],
+                                        (((sbyte)tData[4 + i]) << 8) + tData[5 + i]);
+                                    point.Enqueue(t);
                                 }
-                                catch (Exception) { }
+                                catch (Exception e) { Console.WriteLine(e.ToString()); }
                             }
 
                         }
@@ -1164,7 +1225,7 @@ namespace G_Sensor_FFT
                                         ((((sbyte)tData[2 + i]) << 8) + tData[3 + i]),
                                         ((((sbyte)tData[4 + i]) << 8) + tData[5 + i])));
                                 }
-                                catch (Exception) { }
+                                catch (Exception e) { Console.WriteLine(e.ToString()); }
                             }
                         }
                         break;
@@ -1220,8 +1281,8 @@ namespace G_Sensor_FFT
         void ZgcResetHorize(ZedGraphControl zgc)
         {
             dUse duse;
-            zgc.GraphPane.XAxis.Scale.Min -= zgc.GraphPane.XAxis.Scale.Min;
-            zgc.GraphPane.XAxis.Scale.Max -= zgc.GraphPane.XAxis.Scale.Max + TimeScale;
+            zgc.GraphPane.XAxis.Scale.Min = 0;
+            zgc.GraphPane.XAxis.Scale.Max = TimeScale;
             try
             {
                 Invoke(duse = () =>
@@ -1229,7 +1290,7 @@ namespace G_Sensor_FFT
                     zgc.Refresh();
                 });
             }
-            catch { }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
         void ZgcMoveHorize(ZedGraphControl zgc, double displacement)
         {
@@ -1243,7 +1304,7 @@ namespace G_Sensor_FFT
                     zgc.Refresh();
                 });
             }
-            catch { }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         string LoadIniFile()
@@ -1265,6 +1326,7 @@ namespace G_Sensor_FFT
         }
 
         const double TwoPI = Math.PI * 2;
+        const int gMin = 3;
         void PaintData()
         {
             #region Declare Zone
@@ -1272,7 +1334,10 @@ namespace G_Sensor_FFT
             UInt32 SN = 0;
             DateTime startTime = DateTime.Now;
             writeLogTiming = DateTime.Now;
-            //filePath = logPath + "\\" + $"{ByteConverter.ToHexString(curDevice.mac)}_{writeLogTiming.ToString("MMdd_HHmmss")}.csv";
+
+            double oX = 0, oY = 0, oZ = 0;
+            double vX = 0, vY = 0, vZ = 0;
+            double dX = 0, dY = 0, dZ = 0;
 
             int count = 0;
             double axisH = 0;
@@ -1309,18 +1374,17 @@ namespace G_Sensor_FFT
                     double div = 8192.0;
                     string log = "";
                     double x = 0, y = 0, z = 0;
-                    string rcTime = "";
+                    //string rcTime = "";
                     DateTime recordTime = DateTime.Now, tempTime = DateTime.Now;
-                    int timeCount = 0;
+                    //int timeCount = 0;
 
                     #region Data Proccess
                     while (point.Count > 0)
                     {
                         p = point.Dequeue();
-                        if (p is null) { continue; }
+                        if (p._recordTime == new DateTime()) { continue; }
                         axisH++;
                         h = axisH / oneSecondScale;
-                        //x = p._x * multi; y = p._y * multi; z = p._z * multi;
 
                         x = p._x / div; y = p._y / div; z = p._z / div;
                         recordTime = p._recordTime;
@@ -1336,18 +1400,6 @@ namespace G_Sensor_FFT
                         if (!flagWarnZ)
                         {
                             if (limit.z[0] > z || limit.z[1] < z) { lblWarnZ.SetWarn(); flagWarnZ = true; }
-                        }
-
-                        //由Tool來調整時間間距
-                        if (tempTime == recordTime)
-                        {
-                            rcTime = UNIXTime.DatetimeToUnix(recordTime).ToString() + recordTime.AddMilliseconds((++timeCount) / 10).ToString(".fff") + (timeCount % 10);
-                        }
-                        else
-                        {
-                            timeCount = 0;
-                            rcTime = UNIXTime.DatetimeToUnix(recordTime).ToString() + recordTime.ToString(".fff") + '0';
-                            tempTime = recordTime;
                         }
 
                         fftX[fftArrayCount] = new FFT_Complex(x, 0.0f);
@@ -1386,7 +1438,78 @@ namespace G_Sensor_FFT
                         }
                     }
                     #endregion
+                    PointPairList[] pFft = new PointPairList[3];
+                    pFft[0] = new PointPairList();
+                    pFft[1] = new PointPairList();
+                    pFft[2] = new PointPairList();
+                    if (count > 10)
+                    {
+                        #region FFT calculate and paint
+                        FFT_translateToSpectrum(out hz, out m_amplitude_x[0], out m_fft_out_x[0], fftX, fftX.Length, m_hz);
+                        FFT_translateToSpectrum(out hz, out m_amplitude_y[0], out m_fft_out_y[0], fftY, fftY.Length, m_hz);
+                        FFT_translateToSpectrum(out hz, out m_amplitude_z[0], out m_fft_out_z[0], fftZ, fftZ.Length, m_hz);
 
+                        #region FFT Point
+                        for (int i = 1; i < m_amplitude_x.Length / 2; i++)
+                        {
+                            pFft[0].Add(hz * i, m_amplitude_x[i]);
+                            pFft[1].Add(hz * i, m_amplitude_y[i]);
+                            pFft[2].Add(hz * i, m_amplitude_z[i]);
+                        }
+                        #endregion
+
+                        #region Prepare Data
+
+                        var gRmsX = m_amplitude_x.Max();    //G力(RMS) 單位:牛頓
+                        var gRmsY = m_amplitude_y.Max();    //G力(RMS) 單位:牛頓
+                        var gRmsZ = m_amplitude_z.Max();    //G力(RMS) 單位:牛頓
+
+                        var pX = Array.IndexOf(m_amplitude_x, gRmsX);
+                        var pY = Array.IndexOf(m_amplitude_y, gRmsY);
+                        var pZ = Array.IndexOf(m_amplitude_z, gRmsZ);
+
+                        if (pX < gMin) gRmsX = 0;
+                        if (pY < gMin) gRmsY = 0;
+                        if (pZ < gMin) gRmsZ = 0;
+
+                        gRmsX = 0.707;
+                        pX = 99;
+
+                        var gPeakX = gRmsX * 9.80665;   //G力(Peak) 單位:m/s^2
+                        var gPeakY = gRmsY * 9.80665;   //G力(Peak) 單位:m/s^2
+                        var gPeakZ = gRmsZ * 9.80665;   //G力(Peak) 單位:m/s^2
+
+                        oX = (++pX) * TwoPI;
+                        oY = (++pY) * TwoPI;
+                        oZ = (++pZ) * TwoPI;
+
+                        vX = gPeakX * 1000 / oX;
+                        vY = gPeakY * 1000 / oY;
+                        vZ = gPeakZ * 1000 / oZ;
+
+                        dX = vX * 1414 / oX;
+                        dY = vY * 1414 / oY;
+                        dZ = vZ * 1414 / oZ;
+                        if (flagRecord)
+                        {
+                            if (RecordStartH == 0) { RecordStartH = h; }
+                            AsyncFileAccess.WriteText(filePathExt,
+                                $"{(h - RecordStartH).ToString("F3")}\t" +
+                                $"{gRmsX.ToString("F6")}\t" +
+                                $"{gRmsY.ToString("F6")}\t" +
+                                $"{gRmsZ.ToString("F6")}\t" +
+                                $"{pX.ToString("F6")}\t" +
+                                $"{pY.ToString("F6")}\t" +
+                                $"{pZ.ToString("F6")}\t" +
+                                $"{vX.ToString("F6")}\t" +
+                                $"{vY.ToString("F6")}\t" +
+                                $"{vZ.ToString("F6")}\t" +
+                                $"{dX.ToString("F6")}\t" +
+                                $"{dY.ToString("F6")}\t" +
+                                $"{dZ.ToString("F6")}\n");
+                        }
+                        #endregion
+                    }
                     double
                         max = h,
                         min = h - printDataLen / oneSecondScale;
@@ -1413,41 +1536,6 @@ namespace G_Sensor_FFT
 
                         if (count++ > 10)
                         {
-                            #region FFT calculate and paint
-                            FFT_translateToSpectrum(out hz, out m_amplitude_x[0], out m_fft_out_x[0], fftX, fftX.Length, m_hz);
-                            FFT_translateToSpectrum(out hz, out m_amplitude_y[0], out m_fft_out_y[0], fftY, fftY.Length, m_hz);
-                            FFT_translateToSpectrum(out hz, out m_amplitude_z[0], out m_fft_out_z[0], fftZ, fftZ.Length, m_hz);
-                            PointPairList[] list = new PointPairList[3];
-                            list[0] = new PointPairList();
-                            list[1] = new PointPairList();
-                            list[2] = new PointPairList();
-
-                            #region FFT Point
-                            for (int i = 1; i < m_amplitude_x.Length / 2; i++)
-                            {
-                                list[0].Add(hz * i, m_amplitude_x[i]);
-                                list[1].Add(hz * i, m_amplitude_y[i]);
-                                list[2].Add(hz * i, m_amplitude_z[i]);
-                            }
-                            #endregion
-
-                            #region Prepare Data
-                            double oX, oY, oZ;
-                            double vX, vY, vZ;
-                            double dX, dY, dZ;
-                            oX = list[0].First(t => t.Y == list[0].Max(n => n.Y)).X * TwoPI;
-                            oY = list[1].First(t => t.Y == list[1].Max(n => n.Y)).X * TwoPI;
-                            oZ = list[2].First(t => t.Y == list[2].Max(n => n.Y)).X * TwoPI;
-
-                            vX = x*9.8 / oX;
-                            vY = y*9.8 / oY;
-                            vZ = z*9.8 / oZ;
-
-                            dX = vX*1000 / oX;
-                            dY = vY*1000 / oY;
-                            dZ = vZ*1000 / oZ;
-                            #endregion
-
                             #region Velocity
                             pVelocityList[0].Add(h, vX);
                             pVelocityList[1].Add(h, vY);
@@ -1474,9 +1562,9 @@ namespace G_Sensor_FFT
                                 switch (calculateMode)
                                 {
                                     case CalMode.FFT:
-                                        PaintCurve(list[0], zgcFftX);
-                                        PaintCurve(list[1], zgcFftY);
-                                        PaintCurve(list[2], zgcFftZ);
+                                        PaintCurve(pFft[0], zgcFftX);
+                                        PaintCurve(pFft[1], zgcFftY);
+                                        PaintCurve(pFft[2], zgcFftZ);
                                         break;
                                     case CalMode.Velocity:
                                         MoveZedFftRange(max, min);
@@ -1493,7 +1581,7 @@ namespace G_Sensor_FFT
 
                                 }
                             }
-                            catch { }
+                            catch (Exception e) { Console.WriteLine(e.ToString()); }
                             #endregion
                         }
 
@@ -1558,9 +1646,7 @@ namespace G_Sensor_FFT
                     paneArea.Refresh();
                 });
             }
-            catch
-            {
-            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
             return true;
         }
         bool PaintBar(PointPairList ppl, ZedGraphControl zgc)
@@ -1578,7 +1664,7 @@ namespace G_Sensor_FFT
                     zgc.Refresh();
                 });
             }
-            catch { }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
             return true;
         }
         void ClearPane()
@@ -1623,12 +1709,9 @@ namespace G_Sensor_FFT
                     if (split2.Length < 4) continue;
                     try { result.Add(new PointXYX(double.Parse(split2[1]), double.Parse(split2[2]), double.Parse(split2[3]))); } catch { continue; }
                 }
-                return result;
             }
-            catch
-            {
-                return result;
-            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            return result;
         }
     }
 

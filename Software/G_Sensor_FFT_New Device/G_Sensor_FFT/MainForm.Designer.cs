@@ -48,7 +48,6 @@
             this.ofdInput = new System.Windows.Forms.OpenFileDialog();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.btnPlayPause = new System.Windows.Forms.Button();
-            this.tmrPaintLog = new System.Windows.Forms.Timer(this.components);
             this.btnSpeedController = new System.Windows.Forms.Button();
             this.btnRecord = new System.Windows.Forms.Button();
             this.btnAddMark = new System.Windows.Forms.Button();
@@ -222,6 +221,7 @@
             // 
             this.ofdInput.DefaultExt = "csv";
             this.ofdInput.FileName = "log";
+            this.ofdInput.Filter = "Log files|*.txt";
             // 
             // btnPlayPause
             // 
@@ -420,7 +420,6 @@
         private System.Windows.Forms.OpenFileDialog ofdInput;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Button btnPlayPause;
-        private System.Windows.Forms.Timer tmrPaintLog;
         private System.Windows.Forms.Button btnSpeedController;
         private System.Windows.Forms.Button btnRecord;
         private System.Windows.Forms.Button btnAddMark;
